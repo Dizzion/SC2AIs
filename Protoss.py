@@ -3,7 +3,7 @@ import sc2
 from sc2 import run_game, maps, Race, Difficulty
 from sc2.player import Bot, Computer
 from sc2.constants import NEXUS, PYLON, PROBE, ASSIMILATOR, GATEWAY, \
-    CYBERNETICSCORE, STALKER, STARGATE, VOIDRAY
+    CYBERNETICSCORE, STALKER, STARGATE, VOIDRAY, FORGE, PHOTONCANNON
 
 class DizzBot(sc2.BotAI):
     def __init__(self):
@@ -19,6 +19,7 @@ class DizzBot(sc2.BotAI):
         await self.expand()
         await self.offensive_force_buildings()
         await self.build_offensive_force()
+        await self.defensive_buildings()
         await self.attack()
 
     async def build_workers(self):
@@ -49,6 +50,19 @@ class DizzBot(sc2.BotAI):
                     break
                 if not self.units(ASSIMILATOR).closer_than(1.0, vaspene).exists:
                     await self.do(worker.build(ASSIMILATOR, vaspene))
+
+    async def defensive_buildings(self):
+        if self.units(PYLON).ready.exists:
+            pylon = self.units(PYLON).ready.random
+
+            if not self.units(FORGE):
+                if self.can_afford(FORGE) and not self.already_pending(FORGE):
+                    await self.build(FORGE, near=pylon)
+
+            elif self.units(FORGE).ready.exists:
+                if len(self.units(STALKER)) < 15 and self.units(STARGATE).ready.exists:
+                    if self.can_afford(PHOTONCANNON) and len(self.units(PHOTONCANNON)) < 5:
+                        await self.build(PHOTONCANNON, near=pylon)
 
     async def offensive_force_buildings(self):
         if self.units(PYLON).ready.exists:
